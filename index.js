@@ -28,30 +28,33 @@ const transporter = nodemailer.createTransport({
 
 
   // Route to send email
-app.post("/send-email", async (req, res) => {
-    const { email, budgetName, amount, deadline } = req.body;
-  
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: `New Budget Created: ${budgetName}`,
-      html: `
-        <h2>Budget Created Successfully</h2>
-        <p><strong>Budget Name:</strong> ${budgetName}</p>
-        <p><strong>Amount:</strong> ₦${amount.toLocaleString()}</p>
-        <p><strong>Deadline:</strong> ${new Date(deadline).toLocaleDateString()}</p>
-        <p>Don't forget to manage your budget effectively!</p>
-      `,
-    };
+  app.post("/send-email", async (req, res) => {
+    console.log("Email Request Data:", req.body);  // ✅ Log incoming data
   
     try {
+      const { email, budgetName, amount, deadline } = req.body;
+  
+      if (!email || !budgetName || !amount || !deadline) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+  
+      // ✅ Example: Using Nodemailer
+      const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: `Budget Reminder: ${budgetName}`,
+        text: `Hello, your budget '${budgetName}' of ₦${amount} is due on ${deadline}. Don't forget!`
+      };
+  
       await transporter.sendMail(mailOptions);
-      res.status(200).json({ message: "Email sent successfully" });
+  
+      res.status(200).json({ message: "Email sent successfully!" });
     } catch (error) {
-      console.error("Email sending error:", error);
-      res.status(500).json({ message: "Error sending email" });
+      console.error("❌ Error sending email:", error);
+      res.status(500).json({ message: "Failed to send email" });
     }
   });
+  
 
 
 const userRoutes = require("./src/users/user.route")
