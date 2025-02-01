@@ -1,6 +1,7 @@
+require('dotenv').config()
 const express = require('express');
 const nodemailer = require("nodemailer");
-require('dotenv').config()
+
 
 const cors = require('cors');
 const mongoose = require('mongoose');
@@ -18,7 +19,9 @@ app.use(cors({
 
 // Nodemailer transporter
 const transporter = nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.gmail.com",
+  port: 587,
+  secure: false, // True for port 465, false for port 587
     auth: {
       user: process.env.EMAIL_USER, // Your Gmail
       pass: process.env.EMAIL_PASS, // Your Gmail App Password
