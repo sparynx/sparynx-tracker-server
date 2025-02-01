@@ -19,9 +19,7 @@ app.use(cors({
 
 // Nodemailer transporter
 const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-  port: 587,
-  secure: false, // True for port 465, false for port 587
+    service: "gmail",
     auth: {
       user: process.env.EMAIL_USER, // Your Gmail
       pass: process.env.EMAIL_PASS, // Your Gmail App Password
