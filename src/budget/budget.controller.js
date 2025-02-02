@@ -2,31 +2,33 @@ const Budget = require("./budget.model");
 const nodemailer = require("nodemailer");
 require("dotenv").config();
 
-// Set up OAuth 2.0 client
-const { AuthorizationCode } = require("simple-oauth2");
+// Set up OAuth 2.0 client using Client Credentials Grant Flow
+const { ClientCredentials } = require("simple-oauth2");
 
-// Ensure you are using the correct OAuth2 flow
-const oauth2Client = new AuthorizationCode({
+const oauth2Client = new ClientCredentials({
     client: {
         id: process.env.OUTLOOK_CLIENT_ID,
         secret: process.env.OUTLOOK_CLIENT_SECRET,
     },
     auth: {
-        tokenHost: "https://login.microsoftonline.com",
-        authorizePath: `/${process.env.OUTLOOK_TENANT_ID}/oauth2/v2.0/authorize`,
-        tokenPath: `/${process.env.OUTLOOK_TENANT_ID}/oauth2/v2.0/token`,
+        tokenHost: `https://login.microsoftonline.com/${process.env.OUTLOOK_TENANT_ID}/oauth2/v2.0`,
+        tokenPath: "/token",
+    },
+    options: {
+        bodyFormat: "form", // Required for Microsoft's OAuth2 endpoint
     },
 });
 
 // Function to get access token
 const getAccessToken = async () => {
-    const tokenParams = {
-        scope: "https://outlook.office365.com/.default",
-    };
-
     try {
+        const tokenParams = {
+            scope: "https://outlook.office365.com/.default",
+            grant_type: "client_credentials", // Explicitly include grant_type
+        };
+
         const accessToken = await oauth2Client.getToken(tokenParams);
-        return accessToken.token.access_token; // Ensure this path is correct
+        return accessToken.token.access_token;
     } catch (error) {
         console.error("❌ Error getting OAuth2 token:", error.message);
         return null;
@@ -37,17 +39,28 @@ const getAccessToken = async () => {
 let transporter;
 
 const createTransporter = async () => {
-    const accessToken = await getAccessToken();
-    if (!accessToken) return null;
+    try {
+        const accessToken = await getAccessToken();
+        if (!accessToken) throw new Error("No access token");
 
-    transporter = nodemailer.createTransport({
-        service: "hotmail",
-        auth: {
-            type: "OAuth2",
-            user: process.env.EMAIL_USER,
-            accessToken: accessToken,
-        },
-    });
+        transporter = nodemailer.createTransport({
+            host: "smtp.office365.com",
+            port: 587,
+            secure: false, // Use TLS
+            auth: {
+                type: "OAuth2",
+                user: process.env.EMAIL_USER,
+                accessToken,
+            },
+            tls: {
+                ciphers: "SSLv3",
+            },
+        });
+
+        console.log("✅ Transporter initialized");
+    } catch (error) {
+        console.error("❌ Transporter creation failed:", error.message);
+    }
 };
 
 // Function to send email
@@ -202,10 +215,8 @@ const updateABudget = async (req, res) => {
 
         res.status(200).json({ message: "Budget updated successfully.", budget });
     } catch (error) {
-        console.error("Error updating budget:", error.message);
-        
-         // Return a 400 status code for validation errors or a 500 for server errors.
-         res.status(error.isValidationError ? 400 : 500).json({ 
+         console.error("Error updating budget:", error.message);
+         res.status(500).json({ 
              message: "Failed to update budget.", 
              error: error.message 
          });
