@@ -1,9 +1,7 @@
 const Budget = require("./budget.model");
 const nodemailer = require("nodemailer");
 
-
 require("dotenv").config();
-
 
 // Set up OAuth 2.0 client
 const { AuthorizationCode } = require("simple-oauth2");
@@ -20,7 +18,6 @@ const oauth2Client = new AuthorizationCode({
     },
 });
 
-
 // Function to get access token
 const getAccessToken = async () => {
     const tokenParams = {
@@ -36,8 +33,7 @@ const getAccessToken = async () => {
     }
 };
 
-
-//create node transport 
+// Create node transport 
 let transporter;
 
 const createTransporter = async () => {
@@ -53,8 +49,6 @@ const createTransporter = async () => {
         },
     });
 };
-
-
 
 // Function to send email
 const sendBudgetCreationEmail = async (userEmail, budgetDetails) => {
@@ -90,10 +84,6 @@ const sendBudgetCreationEmail = async (userEmail, budgetDetails) => {
     }
 };
 
-
-
-
-
 // Create a new budget
 const postABudget = async (req, res) => {
     try {
@@ -103,7 +93,15 @@ const postABudget = async (req, res) => {
             return res.status(400).json({ message: 'All required fields must be provided.' });
         }
 
-        const budget = new Budget({ name, amount, category, description, userId, startDate: new Date(startDate), endDate: new Date(endDate), });
+        const budget = new Budget({
+            name,
+            amount,
+            category,
+            description,
+            userId,
+            startDate: new Date(startDate),
+            endDate: new Date(endDate),
+        });
         await budget.save();
 
         // Create budgetDetails object explicitly
@@ -128,8 +126,6 @@ const postABudget = async (req, res) => {
     }
 };
 
-
-
 // Get all budgets
 const getAllBudgets = async (req, res) => {
     try {
@@ -139,7 +135,6 @@ const getAllBudgets = async (req, res) => {
         res.status(500).json({ message: 'Failed to retrieve budgets.', error: error.message });
     }
 };
-
 
 // Get a single budget by ID
 const getASingleBudget = async (req, res) => {
@@ -156,7 +151,6 @@ const getASingleBudget = async (req, res) => {
         res.status(500).json({ message: 'Failed to retrieve budget.', error: error.message });
     }
 };
-
 
 // Update a budget by ID
 const updateABudget = async (req, res) => {
@@ -200,7 +194,6 @@ const updateABudget = async (req, res) => {
     }
 };
 
-
 // Delete a budget by ID
 const deleteABudget = async (req, res) => {
     try {
@@ -217,7 +210,6 @@ const deleteABudget = async (req, res) => {
         res.status(500).json({ message: 'Failed to delete budget.', error: error.message });
     }
 };
-
 
 module.exports = {
     postABudget,
