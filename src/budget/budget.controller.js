@@ -43,7 +43,7 @@ const sendBudgetCreationEmail = async (userEmail, budgetDetails) => {
 // Create a new budget
 const postABudget = async (req, res) => {
     try {
-        const { name, amount, category, description, userId, startDate, endDate } = req.body;
+        const { name, amount, category, description, userEmail, userId, startDate, endDate } = req.body;
 
         if (!name || !amount || !category || !startDate || !endDate) {
             return res.status(400).json({ message: 'All required fields must be provided.' });
