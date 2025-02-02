@@ -8,7 +8,7 @@ require("dotenv").config();
 // Set up OAuth 2.0 client
 const { AuthorizationCode } = require("simple-oauth2");
 
-const oauth2Client = new AuthorizationCode({  
+const oauth2Client = new AuthorizationCode({
     client: {
         id: process.env.OUTLOOK_CLIENT_ID,
         secret: process.env.OUTLOOK_CLIENT_SECRET,
@@ -37,12 +37,14 @@ const getAccessToken = async () => {
 };
 
 
-// Create Nodemailer transporter
+//create node transport 
+let transporter;
+
 const createTransporter = async () => {
     const accessToken = await getAccessToken();
     if (!accessToken) return null;
 
-    return nodemailer.createTransport({
+    transporter = nodemailer.createTransport({
         service: "hotmail",
         auth: {
             type: "OAuth2",
@@ -51,6 +53,7 @@ const createTransporter = async () => {
         },
     });
 };
+
 
 
 // Function to send email
@@ -90,6 +93,7 @@ const sendBudgetCreationEmail = async (userEmail, budgetDetails) => {
 
 
 
+
 // Create a new budget
 const postABudget = async (req, res) => {
     try {
@@ -102,20 +106,21 @@ const postABudget = async (req, res) => {
         const budget = new Budget({ name, amount, category, description, userId, startDate: new Date(startDate), endDate: new Date(endDate), });
         await budget.save();
 
+        // Create budgetDetails object explicitly
+        const budgetDetails = {
+            name: budget.name,
+            amount: budget.amount,
+            category: budget.category,
+            description: budget.description,
+            startDate: budget.startDate,
+            endDate: budget.endDate,
+        };
 
-                // Create budgetDetails object explicitly
-                const budgetDetails = {
-                    name: budget.name,
-                    amount: budget.amount,
-                    category: budget.category,
-                    description: budget.description,
-                    startDate: budget.startDate,
-                    endDate: budget.endDate,
-                };
-        
-                // Call the email function with correctly formatted data
-                await sendBudgetCreationEmail(userEmail, budgetDetails);
-        
+        // Initialize the transporter
+        await createTransporter();
+
+        // Call the email function with correctly formatted data
+        await sendBudgetCreationEmail(userEmail, budgetDetails);
 
         res.status(201).json({ message: 'Budget created successfully.', budget });
     } catch (error) {
