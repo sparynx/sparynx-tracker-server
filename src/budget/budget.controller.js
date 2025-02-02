@@ -1,24 +1,63 @@
 const Budget = require("./budget.model");
 const nodemailer = require("nodemailer");
 
-const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,  // Outlook SMTP
-    port: process.env.SMTP_PORT,  // 587 for TLS
-    secure: false,  // Use TLS, not SSL
-    auth: {
-        user: process.env.EMAIL_USER,  // Your Outlook email
-        pass: process.env.EMAIL_PASSWORD,  // Your Outlook password
+const { Client } = require("simple-oauth2");
+require("dotenv").config();
+
+
+// Set up OAuth 2.0 client
+const oauth2Client = new Client({
+    client: {
+        id: process.env.OUTLOOK_CLIENT_ID,
+        secret: process.env.OUTLOOK_CLIENT_SECRET,
     },
-    tls: {
-        ciphers: "SSLv3",  // Ensures compatibility
+    auth: {
+        tokenHost: "https://login.microsoftonline.com",
+        authorizePath: `/${process.env.OUTLOOK_TENANT_ID}/oauth2/v2.0/authorize`,
+        tokenPath: `/${process.env.OUTLOOK_TENANT_ID}/oauth2/v2.0/token`,
     },
 });
 
 
+// Function to get access token
+const getAccessToken = async () => {
+    const tokenParams = {
+        scope: "https://outlook.office365.com/.default",
+    };
 
-  // Function to send email notification
-  const sendBudgetCreationEmail = async (userEmail, budgetDetails) => {
-    console.log("📩 Debug: Preparing email for →", userEmail);
+    try {
+        const accessToken = await oauth2Client.clientCredentials.getToken(tokenParams);
+        return accessToken.token.access_token;
+    } catch (error) {
+        console.error("❌ Error getting OAuth2 token:", error.message);
+        return null;
+    }
+};
+
+
+// Create Nodemailer transporter
+const createTransporter = async () => {
+    const accessToken = await getAccessToken();
+    if (!accessToken) return null;
+
+    return nodemailer.createTransport({
+        service: "hotmail",
+        auth: {
+            type: "OAuth2",
+            user: process.env.EMAIL_USER,
+            accessToken: accessToken,
+        },
+    });
+};
+
+
+// Function to send email
+const sendBudgetCreationEmail = async (userEmail, budgetDetails) => {
+    const transporter = await createTransporter();
+    if (!transporter) {
+        console.error(" Could not create transporter.");
+        return;
+    }
 
     const mailOptions = {
         from: `"Sparynx BudgetTracker" <${process.env.EMAIL_USER}>`,
@@ -40,14 +79,14 @@ const transporter = nodemailer.createTransport({
     };
 
     try {
-        console.log("📨 Debug: Sending email...");
         await transporter.sendMail(mailOptions);
-        console.log("✅ Debug: Email sent successfully.");
+        console.log(" Email sent successfully.");
     } catch (error) {
-        console.error("❌ Debug: Failed to send email:", error.message);
+        console.error(" Failed to send email:", error.message);
     }
 };
-  
+
+
 
 // Create a new budget
 const postABudget = async (req, res) => {
