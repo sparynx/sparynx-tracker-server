@@ -1,5 +1,44 @@
 const Budget = require("./budget.model");
+const nodemailer = require("nodemailer");
 
+const transporter = nodemailer.createTransport({
+    service: "gmail", // Use your email service (e.g., Gmail, Outlook)
+    auth: {
+      user: process.env.EMAIL_USER, // Your email address
+      pass: process.env.EMAIL_PASSWORD, // Your email password or app-specific password
+    },
+  });
+
+
+  // Function to send email notification
+const sendBudgetCreationEmail = async (userEmail, budgetDetails) => {
+    const mailOptions = {
+      from: process.env.EMAIL_USER, // Sender email address
+      to: userEmail, // Recipient email address
+      subject: "New Budget Created", // Email subject
+      html: `
+        <h1>New Budget Created</h1>
+        <p>Here are the details of your new budget:</p>
+        <ul>
+          <li><strong>Name:</strong> ${budgetDetails.name}</li>
+          <li><strong>Amount:</strong> $${budgetDetails.amount}</li>
+          <li><strong>Category:</strong> ${budgetDetails.category}</li>
+          <li><strong>Description:</strong> ${budgetDetails.description || "N/A"}</li>
+          <li><strong>Start Date:</strong> ${budgetDetails.startDate.toDateString()}</li>
+          <li><strong>End Date:</strong> ${budgetDetails.endDate.toDateString()}</li>
+        </ul>
+        <p>Thank you for using Sparynx BudgetTracker!</p>
+      `,
+    };
+  
+    try {
+      await transporter.sendMail(mailOptions);
+      console.log("Email sent successfully.");
+    } catch (error) {
+      console.error("Failed to send email:", error.message);
+    }
+  };
+  
 
 // Create a new budget
 const postABudget = async (req, res) => {
@@ -10,8 +49,23 @@ const postABudget = async (req, res) => {
             return res.status(400).json({ message: 'All required fields must be provided.' });
         }
 
-        const budget = new Budget({ name, amount, category, description, userId, startDate, endDate });
+        const budget = new Budget({ name, amount, category, description, userId, startDate: new Date(startDate), endDate: new Date(endDate), });
         await budget.save();
+
+
+                // Create budgetDetails object explicitly
+                const budgetDetails = {
+                    name: budget.name,
+                    amount: budget.amount,
+                    category: budget.category,
+                    description: budget.description,
+                    startDate: budget.startDate,
+                    endDate: budget.endDate,
+                };
+        
+                // Call the email function with correctly formatted data
+                await sendBudgetCreationEmail(userEmail, budgetDetails);
+        
 
         res.status(201).json({ message: 'Budget created successfully.', budget });
     } catch (error) {
