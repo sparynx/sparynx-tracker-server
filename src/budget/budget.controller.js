@@ -33,7 +33,7 @@ const getAccessToken = async () => {
     }
 };
 
-// Create node transport 
+// Create node transport
 let transporter;
 
 const createTransporter = async () => {
@@ -89,6 +89,11 @@ const postABudget = async (req, res) => {
     try {
         const { name, amount, category, description, userEmail, userId, startDate, endDate } = req.body;
 
+        // Check if userEmail is provided
+        if (!userEmail) {
+            return res.status(400).json({ message: 'User email is required.' });
+        }
+
         if (!name || !amount || !category || !startDate || !endDate) {
             return res.status(400).json({ message: 'All required fields must be provided.' });
         }
@@ -122,6 +127,7 @@ const postABudget = async (req, res) => {
 
         res.status(201).json({ message: 'Budget created successfully.', budget });
     } catch (error) {
+        console.error("❌ Error creating budget:", error.message);
         res.status(500).json({ message: 'Failed to create budget.', error: error.message });
     }
 };
