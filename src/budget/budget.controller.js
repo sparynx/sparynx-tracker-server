@@ -124,6 +124,7 @@ const postABudget = async (req, res) => {
 };
 
 
+
 // Get all budgets
 const getAllBudgets = async (req, res) => {
     try {
