@@ -1,36 +1,30 @@
 const Budget = require("./budget.model");
 const nodemailer = require("nodemailer");
+const axios = require("axios"); // Use axios for token retrieval
 require("dotenv").config();
-
-// Set up OAuth 2.0 client using Client Credentials Grant Flow
-const { ClientCredentials } = require("simple-oauth2");
-
-const oauth2Client = new ClientCredentials({
-    client: {
-        id: process.env.OUTLOOK_CLIENT_ID,
-        secret: process.env.OUTLOOK_CLIENT_SECRET,
-    },
-    auth: {
-        tokenHost: `https://login.microsoftonline.com/${process.env.OUTLOOK_TENANT_ID}/oauth2/v2.0`,
-        tokenPath: "/token",
-    },
-    options: {
-        bodyFormat: "form", // Required for Microsoft's OAuth2 endpoint
-    },
-});
 
 // Function to get access token
 const getAccessToken = async () => {
     try {
-        const tokenParams = {
-            scope: "https://outlook.office365.com/.default",
-            grant_type: "client_credentials", // Explicitly include grant_type
-        };
+        const tokenUrl = `https://login.microsoftonline.com/${process.env.OUTLOOK_TENANT_ID}/oauth2/v2.0/token`;
 
-        const accessToken = await oauth2Client.getToken(tokenParams);
-        return accessToken.token.access_token;
+        // Prepare form data for the token request
+        const params = new URLSearchParams();
+        params.append("client_id", process.env.OUTLOOK_CLIENT_ID);
+        params.append("client_secret", process.env.OUTLOOK_CLIENT_SECRET);
+        params.append("scope", "https://outlook.office365.com/.default");
+        params.append("grant_type", "client_credentials");
+
+        // Make the POST request to retrieve the access token
+        const response = await axios.post(tokenUrl, params, {
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+        });
+
+        return response.data.access_token;
     } catch (error) {
-        console.error("❌ Error getting OAuth2 token:", error.message);
+        console.error("❌ Error getting OAuth2 token:", error.response?.data || error.message);
         return null;
     }
 };
@@ -204,17 +198,17 @@ const updateABudget = async (req, res) => {
     updatedData.updatedAt = new Date();
 
     try {
-        const budget = await Budget.findByIdAndUpdate(id, updatedData, {
-            new: true,
-            runValidators: true, // Still ensure other validations (like required fields) are enforced
-        });
+         const budget = await Budget.findByIdAndUpdate(id, updatedData, {
+             new: true,
+             runValidators: true, // Still ensure other validations (like required fields) are enforced
+         });
 
-        if (!budget) {
-            return res.status(404).json({ message: "Budget not found." });
-        }
+         if (!budget) {
+             return res.status(404).json({ message: "Budget not found." });
+         }
 
-        res.status(200).json({ message: "Budget updated successfully.", budget });
-    } catch (error) {
+         res.status(200).json({ message: "Budget updated successfully.", budget });
+     } catch (error) {
          console.error("Error updating budget:", error.message);
          res.status(500).json({ 
              message: "Failed to update budget.", 
