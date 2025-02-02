@@ -1,12 +1,14 @@
 const Budget = require("./budget.model");
 const nodemailer = require("nodemailer");
 
-const { create } = require("simple-oauth2");
+
 require("dotenv").config();
 
 
 // Set up OAuth 2.0 client
-const oauth2Client = create({  // ✅ Correct
+const { AuthorizationCode } = require("simple-oauth2");
+
+const oauth2Client = new AuthorizationCode({  
     client: {
         id: process.env.OUTLOOK_CLIENT_ID,
         secret: process.env.OUTLOOK_CLIENT_SECRET,
