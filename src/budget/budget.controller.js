@@ -55,11 +55,9 @@ const createTransporter = async () => {
 
 // Function to send email
 const sendBudgetCreationEmail = async (userEmail, budgetDetails) => {
-    const transporter = await createTransporter();
-    if (!transporter) {
-        console.error(" Could not create transporter.");
-        return;
-    }
+    console.log("📩 Preparing to send email...");
+    console.log("🛠️ Sending email to:", userEmail);
+    console.log("📊 Email Details:", budgetDetails);
 
     const mailOptions = {
         from: `"Sparynx BudgetTracker" <${process.env.EMAIL_USER}>`,
@@ -81,12 +79,14 @@ const sendBudgetCreationEmail = async (userEmail, budgetDetails) => {
     };
 
     try {
-        await transporter.sendMail(mailOptions);
-        console.log(" Email sent successfully.");
+        console.log("📨 Attempting to send email...");
+        const info = await transporter.sendMail(mailOptions);
+        console.log("✅ Email sent successfully:", info);
     } catch (error) {
-        console.error(" Failed to send email:", error.message);
+        console.error("❌ Failed to send email:", error.message);
     }
 };
+
 
 
 
