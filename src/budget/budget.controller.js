@@ -1,11 +1,11 @@
 const Budget = require("./budget.model");
 const nodemailer = require("nodemailer");
-
 require("dotenv").config();
 
 // Set up OAuth 2.0 client
 const { AuthorizationCode } = require("simple-oauth2");
 
+// Ensure you are using the correct OAuth2 flow
 const oauth2Client = new AuthorizationCode({
     client: {
         id: process.env.OUTLOOK_CLIENT_ID,
@@ -25,8 +25,8 @@ const getAccessToken = async () => {
     };
 
     try {
-        const accessToken = await oauth2Client.clientCredentials.getToken(tokenParams);
-        return accessToken.token.access_token;
+        const accessToken = await oauth2Client.getToken(tokenParams);
+        return accessToken.token.access_token; // Ensure this path is correct
     } catch (error) {
         console.error("❌ Error getting OAuth2 token:", error.message);
         return null;
@@ -49,6 +49,7 @@ const createTransporter = async () => {
         },
     });
 };
+
 // Function to send email
 const sendBudgetCreationEmail = async (userEmail, budgetDetails) => {
     console.log("📩 Preparing to send email...");
@@ -76,10 +77,12 @@ const sendBudgetCreationEmail = async (userEmail, budgetDetails) => {
 
     try {
         console.log("📨 Attempting to send email...");
+        
         // Ensure transporter is initialized before sending the email
         if (!transporter) {
             await createTransporter();
         }
+
         const info = await transporter.sendMail(mailOptions);
         console.log("✅ Email sent successfully:", info);
     } catch (error) {
@@ -110,6 +113,7 @@ const postABudget = async (req, res) => {
             startDate: new Date(startDate),
             endDate: new Date(endDate),
         });
+        
         await budget.save();
 
         // Create budgetDetails object explicitly
@@ -131,6 +135,7 @@ const postABudget = async (req, res) => {
         res.status(500).json({ message: 'Failed to create budget.', error: error.message });
     }
 };
+
 // Get all budgets
 const getAllBudgets = async (req, res) => {
     try {
@@ -145,6 +150,7 @@ const getAllBudgets = async (req, res) => {
 const getASingleBudget = async (req, res) => {
     try {
         const { id } = req.params;
+        
         const budget = await Budget.findById(id);
 
         if (!budget) {
@@ -160,12 +166,14 @@ const getASingleBudget = async (req, res) => {
 // Update a budget by ID
 const updateABudget = async (req, res) => {
     const { id } = req.params;
+    
     let updatedData = req.body;
 
     // Parse dates explicitly (if they exist in the update data)
     if (updatedData.startDate) {
         updatedData.startDate = new Date(updatedData.startDate);
     }
+    
     if (updatedData.endDate) {
         updatedData.endDate = new Date(updatedData.endDate);
     }
@@ -195,31 +203,36 @@ const updateABudget = async (req, res) => {
         res.status(200).json({ message: "Budget updated successfully.", budget });
     } catch (error) {
         console.error("Error updating budget:", error.message);
-        res.status(400).json({ message: "Failed to update budget.", error: error.message });
-    }
+        
+         // Return a 400 status code for validation errors or a 500 for server errors.
+         res.status(error.isValidationError ? 400 : 500).json({ 
+             message: "Failed to update budget.", 
+             error: error.message 
+         });
+     }
 };
 
 // Delete a budget by ID
 const deleteABudget = async (req, res) => {
-    try {
-        const { id } = req.params;
+     try {
+         const { id } = req.params;
 
-        const deletedBudget = await Budget.findByIdAndDelete(id);
+         const deletedBudget = await Budget.findByIdAndDelete(id);
 
-        if (!deletedBudget) {
-            return res.status(404).json({ message: 'Budget not found.' });
-        }
+         if (!deletedBudget) {
+             return res.status(404).json({ message: 'Budget not found.' });
+         }
 
-        res.status(200).json({ message: 'Budget deleted successfully.', deletedBudget });
-    } catch (error) {
-        res.status(500).json({ message: 'Failed to delete budget.', error: error.message });
-    }
+         res.status(200).json({ message: 'Budget deleted successfully.', deletedBudget });
+     } catch (error) {
+         res.status(500).json({ message: 'Failed to delete budget.', error: error.message });
+     }
 };
 
 module.exports = {
-    postABudget,
-    getAllBudgets,
-    getASingleBudget,
-    updateABudget,
-    deleteABudget,
+     postABudget,
+     getAllBudgets,
+     getASingleBudget,
+     updateABudget,
+     deleteABudget,
 };
