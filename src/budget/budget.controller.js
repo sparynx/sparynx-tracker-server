@@ -2,44 +2,51 @@ const Budget = require("./budget.model");
 const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
-    service: "gmail", // Use your email service (e.g., Gmail, Outlook)
+    host: process.env.SMTP_HOST,  // Outlook SMTP
+    port: process.env.SMTP_PORT,  // 587 for TLS
+    secure: false,  // Use TLS, not SSL
     auth: {
-      user: process.env.EMAIL_USER, // Your email address
-      pass: process.env.EMAIL_PASSWORD, // Your email password or app-specific password
+        user: process.env.EMAIL_USER,  // Your Outlook email
+        pass: process.env.EMAIL_PASSWORD,  // Your Outlook password
     },
-    secure: true, // Use SSL
-    port: 465, // Try 587 if 465 doesn't work
-  });
+    tls: {
+        ciphers: "SSLv3",  // Ensures compatibility
+    },
+});
+
 
 
   // Function to send email notification
-const sendBudgetCreationEmail = async (userEmail, budgetDetails) => {
+  const sendBudgetCreationEmail = async (userEmail, budgetDetails) => {
+    console.log("📩 Debug: Preparing email for →", userEmail);
+
     const mailOptions = {
-      from: process.env.EMAIL_USER, // Sender email address
-      to: userEmail, // Recipient email address
-      subject: "New Budget Created", // Email subject
-      html: `
-        <h1>New Budget Created</h1>
-        <p>Here are the details of your new budget:</p>
-        <ul>
-          <li><strong>Name:</strong> ${budgetDetails.name}</li>
-          <li><strong>Amount:</strong> $${budgetDetails.amount}</li>
-          <li><strong>Category:</strong> ${budgetDetails.category}</li>
-          <li><strong>Description:</strong> ${budgetDetails.description || "N/A"}</li>
-          <li><strong>Start Date:</strong> ${budgetDetails.startDate.toDateString()}</li>
-          <li><strong>End Date:</strong> ${budgetDetails.endDate.toDateString()}</li>
-        </ul>
-        <p>Thank you for using Sparynx BudgetTracker!</p>
-      `,
+        from: `"Sparynx BudgetTracker" <${process.env.EMAIL_USER}>`,
+        to: userEmail,
+        subject: "New Budget Created",
+        html: `
+            <h1>New Budget Created</h1>
+            <p>Here are the details of your new budget:</p>
+            <ul>
+                <li><strong>Name:</strong> ${budgetDetails.name}</li>
+                <li><strong>Amount:</strong> $${budgetDetails.amount}</li>
+                <li><strong>Category:</strong> ${budgetDetails.category}</li>
+                <li><strong>Description:</strong> ${budgetDetails.description || "N/A"}</li>
+                <li><strong>Start Date:</strong> ${budgetDetails.startDate?.toDateString()}</li>
+                <li><strong>End Date:</strong> ${budgetDetails.endDate?.toDateString()}</li>
+            </ul>
+            <p>Thank you for using Sparynx BudgetTracker!</p>
+        `,
     };
-  
+
     try {
-      await transporter.sendMail(mailOptions);
-      console.log("Email sent successfully.");
+        console.log("📨 Debug: Sending email...");
+        await transporter.sendMail(mailOptions);
+        console.log("✅ Debug: Email sent successfully.");
     } catch (error) {
-      console.error("Failed to send email:", error.message);
+        console.error("❌ Debug: Failed to send email:", error.message);
     }
-  };
+};
   
 
 // Create a new budget
