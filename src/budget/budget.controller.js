@@ -49,7 +49,6 @@ const createTransporter = async () => {
         },
     });
 };
-
 // Function to send email
 const sendBudgetCreationEmail = async (userEmail, budgetDetails) => {
     console.log("📩 Preparing to send email...");
@@ -77,6 +76,10 @@ const sendBudgetCreationEmail = async (userEmail, budgetDetails) => {
 
     try {
         console.log("📨 Attempting to send email...");
+        // Ensure transporter is initialized before sending the email
+        if (!transporter) {
+            await createTransporter();
+        }
         const info = await transporter.sendMail(mailOptions);
         console.log("✅ Email sent successfully:", info);
     } catch (error) {
@@ -119,9 +122,6 @@ const postABudget = async (req, res) => {
             endDate: budget.endDate,
         };
 
-        // Initialize the transporter
-        await createTransporter();
-
         // Call the email function with correctly formatted data
         await sendBudgetCreationEmail(userEmail, budgetDetails);
 
@@ -131,7 +131,6 @@ const postABudget = async (req, res) => {
         res.status(500).json({ message: 'Failed to create budget.', error: error.message });
     }
 };
-
 // Get all budgets
 const getAllBudgets = async (req, res) => {
     try {
