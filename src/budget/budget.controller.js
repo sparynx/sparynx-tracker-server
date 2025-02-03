@@ -247,6 +247,78 @@ const updateABudget = async (req, res) => {
 
 // Delete a budget by ID
 
+// Function to send budget deletion confirmation email
+const sendDeletionConfirmationEmail = async (userEmail, budgetDetails) => {
+    console.log("📩 Preparing to send deletion confirmation email...");
+    console.log("🛠️ Sending email to:", userEmail);
+    console.log("📊 Email Details:", budgetDetails);
+
+    const sentFrom = new Sender(process.env.EMAIL_SENDER, "Sparynx BudgetTracker");
+    const recipients = [new Recipient(userEmail)];
+
+    const htmlContent = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 20px auto; padding: 20px; border-radius: 10px; background: #f9f9f9; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
+        <h1 style="color: #d9534f; text-align: center;">🗑️ Budget Deleted</h1>
+        <p style="font-size: 16px; color: #333;">The following budget has been deleted from your account:</p>
+        
+        <table style="width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden;">
+            <tr style="background: #d9534f; color: #fff;">
+                <th style="padding: 10px; text-align: left;">Detail</th>
+                <th style="padding: 10px; text-align: left;">Value</th>
+            </tr>
+            <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Name:</strong></td>
+                <td style="padding: 10px; border-bottom: 1px solid #ddd;">${budgetDetails.name}</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Amount:</strong></td>
+                <td style="padding: 10px; border-bottom: 1px solid #ddd;">$${budgetDetails.amount}</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Category:</strong></td>
+                <td style="padding: 10px; border-bottom: 1px solid #ddd;">${budgetDetails.category}</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Description:</strong></td>
+                <td style="padding: 10px; border-bottom: 1px solid #ddd;">${budgetDetails.description || "N/A"}</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Start Date:</strong></td>
+                <td style="padding: 10px; border-bottom: 1px solid #ddd;">${budgetDetails.startDate?.toDateString()}</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px;"><strong>End Date:</strong></td>
+                <td style="padding: 10px;">${budgetDetails.endDate?.toDateString()}</td>
+            </tr>
+        </table>
+
+        <p style="font-size: 16px; color: #333; text-align: center; margin-top: 20px;">
+            Thank you for using <strong style="color: #d9534f;">Sparynx BudgetTracker</strong>! 🚀
+        </p>
+
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="https://sparynxbudgetapp.vercel.app" style="display: inline-block; padding: 12px 20px; font-size: 16px; color: #fff; background: #d9534f; text-decoration: none; border-radius: 5px;">Manage Your Budget</a>
+        </div>
+    </div>
+`;
+
+    try {
+        console.log("📨 Attempting to send email...");
+
+        const emailParams = new EmailParams()
+            .setFrom(sentFrom)
+            .setTo(recipients)
+            .setSubject("Budget Deleted")
+            .setHtml(htmlContent);
+
+        await mailerSend.email.send(emailParams);
+        console.log("✅ Email sent successfully!");
+    } catch (error) {
+        console.error("❌ Failed to send email:", error.message);
+    }
+};
+
+
 const deleteABudget = async (req, res) => {
     try {
         const { id } = req.params;
