@@ -164,6 +164,7 @@ const postABudget = async (req, res) => {
             category: budget.category,
             description: budget.description,
             startDate: budget.startDate,
+            userEmail: budget.userEmail,
             endDate: budget.endDate,
         };
 
