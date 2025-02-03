@@ -21,10 +21,7 @@ const budgetSchema = new mongoose.Schema({
         required: true,
        
     },
-    userEmail: {
-        type: String,
-        required: true,
-    }, // Add this field
+ // Add this field
     description: {
         type: String,
         trim: true,
