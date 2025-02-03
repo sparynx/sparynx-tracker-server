@@ -320,44 +320,39 @@ const sendDeletionConfirmationEmail = async (userEmail, budgetDetails) => {
 
 const deleteABudget = async (req, res) => {
     try {
-        const { id } = req.params;
-
-        // Find the budget first to retrieve userEmail
-        const budget = await Budget.findById(id);
-
-        if (!budget) {
-            return res.status(404).json({ message: "Budget not found." });
-        }
-
-        const userEmail = budget.userEmail; // Get userEmail before deletion
-
-        if (!userEmail) {
-            console.error("❌ User email not found in the budget.");
-            return res.status(400).json({ message: "User email not found in the budget." });
-        }
-
-        // Delete the budget
-        await Budget.findByIdAndDelete(id);
-
-        // Send email notification about successful budget deletion
-        const budgetDetails = {
-            name: budget.name,
-            amount: budget.amount,
-            category: budget.category,
-            description: budget.description,
-            startDate: budget.startDate,
-            endDate: budget.endDate,
-        };
-
-        await sendDeletionConfirmationEmail(userEmail, budgetDetails);
-
-        res.status(200).json({ message: "Budget deleted successfully." });
+      const { id } = req.params;
+  
+      const deletedBudget = await Budget.findByIdAndDelete(id);
+  
+      if (!deletedBudget) {
+        return res.status(404).json({ message: "Budget not found." });
+      }
+  
+      // Ensure userEmail is available in the deleted budget
+      const userEmail = deletedBudget.userEmail;
+  
+      if (!userEmail) {
+        console.error("❌ User email not found in the deleted budget.");
+        return res.status(400).json({ message: "User email not found in the deleted budget." });
+      }
+  
+      // Send email notification about successful budget deletion
+      const budgetDetails = {
+        name: deletedBudget.name,
+        amount: deletedBudget.amount,
+        category: deletedBudget.category,
+        description: deletedBudget.description,
+        startDate: deletedBudget.startDate,
+        endDate: deletedBudget.endDate,
+      };
+  
+      await sendDeletionConfirmationEmail(userEmail, budgetDetails);
+  
+      res.status(200).json({ message: "Budget deleted successfully.", deletedBudget });
     } catch (error) {
-        console.error("❌ Error deleting budget:", error.message);
-        res.status(500).json({ message: "Failed to delete budget.", error: error.message });
+      res.status(500).json({ message: "Failed to delete budget.", error: error.message });
     }
-};
-
+  };
 
 
 
