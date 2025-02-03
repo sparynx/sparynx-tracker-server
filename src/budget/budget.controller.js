@@ -17,18 +17,51 @@ const sendBudgetCreationEmail = async (userEmail, budgetDetails) => {
     const recipients = [new Recipient(userEmail)];
 
     const htmlContent = `
-        <h1>New Budget Created</h1>
-        <p>Here are the details of your new budget:</p>
-        <ul>
-            <li><strong>Name:</strong> ${budgetDetails.name}</li>
-            <li><strong>Amount:</strong> $${budgetDetails.amount}</li>
-            <li><strong>Category:</strong> ${budgetDetails.category}</li>
-            <li><strong>Description:</strong> ${budgetDetails.description || "N/A"}</li>
-            <li><strong>Start Date:</strong> ${budgetDetails.startDate?.toDateString()}</li>
-            <li><strong>End Date:</strong> ${budgetDetails.endDate?.toDateString()}</li>
-        </ul>
-        <p>Thank you for using Sparynx BudgetTracker!</p>
-    `;
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 20px auto; padding: 20px; border-radius: 10px; background: #f9f9f9; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
+        <h1 style="color: #4CAF50; text-align: center;">🎯 New Budget Created</h1>
+        <p style="font-size: 16px; color: #333;">Here are the details of your new budget:</p>
+        
+        <table style="width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden;">
+            <tr style="background: #4CAF50; color: #fff;">
+                <th style="padding: 10px; text-align: left;">Detail</th>
+                <th style="padding: 10px; text-align: left;">Value</th>
+            </tr>
+            <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Name:</strong></td>
+                <td style="padding: 10px; border-bottom: 1px solid #ddd;">${budgetDetails.name}</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Amount:</strong></td>
+                <td style="padding: 10px; border-bottom: 1px solid #ddd;">$${budgetDetails.amount}</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Category:</strong></td>
+                <td style="padding: 10px; border-bottom: 1px solid #ddd;">${budgetDetails.category}</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Description:</strong></td>
+                <td style="padding: 10px; border-bottom: 1px solid #ddd;">${budgetDetails.description || "N/A"}</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Start Date:</strong></td>
+                <td style="padding: 10px; border-bottom: 1px solid #ddd;">${budgetDetails.startDate?.toDateString()}</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px;"><strong>End Date:</strong></td>
+                <td style="padding: 10px;">${budgetDetails.endDate?.toDateString()}</td>
+            </tr>
+        </table>
+
+        <p style="font-size: 16px; color: #333; text-align: center; margin-top: 20px;">
+            Thank you for using <strong style="color: #4CAF50;">Sparynx BudgetTracker</strong>! 🚀
+        </p>
+
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="https://sparynxbudgetapp.vercel.app" style="display: inline-block; padding: 12px 20px; font-size: 16px; color: #fff; background: #4CAF50; text-decoration: none; border-radius: 5px;">Manage Your Budget</a>
+        </div>
+    </div>
+`;
+
 
     try {
         console.log("📨 Attempting to send email...");
