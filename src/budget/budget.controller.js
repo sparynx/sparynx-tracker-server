@@ -141,7 +141,7 @@ const postABudget = async (req, res) => {
             return res.status(400).json({ message: 'User email is required.' });
         }
 
-        if (!name || !amount || !category || !startDate || !endDate || !userEmail) {
+        if (!name || !amount || !category || !description || !startDate || !endDate || !userEmail) {
             return res.status(400).json({ message: 'All required fields must be provided.' });
         }
 
@@ -151,6 +151,7 @@ const postABudget = async (req, res) => {
             category,
             description,
             userId,
+            userEmail,
             startDate: new Date(startDate),
             endDate: new Date(endDate),
         });
