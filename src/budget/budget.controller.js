@@ -248,7 +248,8 @@ const updateABudget = async (req, res) => {
 // Delete a budget by ID
 const deleteABudget = async (req, res) => {
     try {
-        const { id, userId } = req.body;
+        const { id } = req.params;
+        const { userId } = req.query; // Get userId from query params
 
         if (!userId) {
             return res.status(400).json({ message: "User ID is required to delete a budget." });
@@ -281,6 +282,7 @@ const deleteABudget = async (req, res) => {
         res.status(500).json({ message: "Failed to delete budget.", error: error.message });
     }
 };
+
 
 
 
