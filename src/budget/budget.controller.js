@@ -246,6 +246,7 @@ const updateABudget = async (req, res) => {
 };
 
 // Delete a budget by ID
+// Delete a budget by ID
 const deleteABudget = async (req, res) => {
     try {
         const { id } = req.params;
@@ -256,11 +257,94 @@ const deleteABudget = async (req, res) => {
             return res.status(404).json({ message: 'Budget not found.' });
         }
 
+        // Send email notification about successful budget deletion
+        const userEmail = deletedBudget.userEmail;  // Assuming 'userEmail' is available in the deleted budget
+        const budgetDetails = {
+            name: deletedBudget.name,
+            amount: deletedBudget.amount,
+            category: deletedBudget.category,
+            description: deletedBudget.description,
+            startDate: deletedBudget.startDate,
+            endDate: deletedBudget.endDate,
+        };
+
+        await sendDeletionConfirmationEmail(userEmail, budgetDetails);
+
         res.status(200).json({ message: 'Budget deleted successfully.', deletedBudget });
     } catch (error) {
         res.status(500).json({ message: 'Failed to delete budget.', error: error.message });
     }
 };
+
+// Function to send email notification for budget deletion
+const sendDeletionConfirmationEmail = async (userEmail, budgetDetails) => {
+    console.log("📩 Preparing to send email about budget deletion...");
+    console.log("🛠️ Sending email to:", userEmail);
+    console.log("📊 Budget Details:", budgetDetails);
+
+    const sentFrom = new Sender(process.env.EMAIL_SENDER, "Sparynx BudgetTracker");
+    const recipients = [new Recipient(userEmail)];
+
+    const htmlContent = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 20px auto; padding: 20px; border-radius: 10px; background: #f9f9f9; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
+            <h1 style="color: #d9534f; text-align: center;">❌ Budget Deleted Successfully</h1>
+            <p style="font-size: 16px; color: #333;">Your budget has been successfully deleted. Here are the details of the budget that was removed:</p>
+            
+            <table style="width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden;">
+                <tr style="background: #d9534f; color: #fff;">
+                    <th style="padding: 10px; text-align: left;">Detail</th>
+                    <th style="padding: 10px; text-align: left;">Value</th>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Name:</strong></td>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">${budgetDetails.name}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Amount:</strong></td>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">$${budgetDetails.amount}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Category:</strong></td>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">${budgetDetails.category}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Description:</strong></td>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">${budgetDetails.description || "N/A"}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Start Date:</strong></td>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">${budgetDetails.startDate?.toDateString()}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px;"><strong>End Date:</strong></td>
+                    <td style="padding: 10px;">${budgetDetails.endDate?.toDateString()}</td>
+                </tr>
+            </table>
+
+            <p style="font-size: 16px; color: #333; text-align: center; margin-top: 20px;">
+                We hope you will create a new budget soon! 🚀
+            </p>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <a href="https://sparynxbudgetapp.vercel.app" style="display: inline-block; padding: 12px 20px; font-size: 16px; color: #fff; background: #d9534f; text-decoration: none; border-radius: 5px;">Manage Your Budgets</a>
+            </div>
+        </div>
+    `;
+
+    try {
+        const emailParams = new EmailParams()
+            .setFrom(sentFrom)
+            .setTo(recipients)
+            .setSubject("❌ Budget Deleted Successfully")
+            .setHtml(htmlContent);
+
+        await mailerSend.email.send(emailParams);
+        console.log("✅ Budget deletion email sent successfully!");
+    } catch (error) {
+        console.error("❌ Failed to send budget deletion email:", error.message);
+    }
+};
+
 
 module.exports = {
     postABudget,
