@@ -112,7 +112,7 @@ const sendBudgetDeadlineReminder = async (userEmail, budgetDetails) => {
             </p>
 
             <div style="text-align: center; margin-top: 20px;">
-                <a href="https://yourwebsite.com/budget" style="display: inline-block; padding: 12px 20px; font-size: 16px; color: #fff; background: #d9534f; text-decoration: none; border-radius: 5px;">Manage Your Budget</a>
+                <a href="https://sparynxbudgetapp.vercel.app" style="display: inline-block; padding: 12px 20px; font-size: 16px; color: #fff; background: #d9534f; text-decoration: none; border-radius: 5px;">Manage Your Budget</a>
             </div>
         </div>
     `;
