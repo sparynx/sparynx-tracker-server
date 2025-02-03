@@ -79,6 +79,59 @@ const sendBudgetCreationEmail = async (userEmail, budgetDetails) => {
     }
 };
 
+
+
+const sendBudgetDeadlineReminder = async (userEmail, budgetDetails) => {
+    console.log("⏳ Sending budget deadline reminder...");
+
+    const sentFrom = new Sender(process.env.EMAIL_SENDER, "Sparynx BudgetTracker");
+    const recipients = [new Recipient(userEmail)];
+
+    const htmlContent = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 20px auto; padding: 20px; border-radius: 10px; background: #fffbe6; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
+            <h1 style="color: #d9534f; text-align: center;">⏳ Budget Deadline Approaching</h1>
+            <p style="font-size: 16px; color: #333;">Your budget is about to end in <strong>24 hours</strong>.</p>
+
+            <table style="width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden;">
+                <tr style="background: #d9534f; color: #fff;">
+                    <th style="padding: 10px; text-align: left;">Detail</th>
+                    <th style="padding: 10px; text-align: left;">Value</th>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>Name:</strong></td>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">${budgetDetails.name}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;"><strong>End Date:</strong></td>
+                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">${budgetDetails.endDate?.toDateString()}</td>
+                </tr>
+            </table>
+
+            <p style="font-size: 16px; color: #333; text-align: center; margin-top: 20px;">
+                Please review your budget before it expires.
+            </p>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <a href="https://yourwebsite.com/budget" style="display: inline-block; padding: 12px 20px; font-size: 16px; color: #fff; background: #d9534f; text-decoration: none; border-radius: 5px;">Manage Your Budget</a>
+            </div>
+        </div>
+    `;
+
+    try {
+        const emailParams = new EmailParams()
+            .setFrom(sentFrom)
+            .setTo(recipients)
+            .setSubject("⏳ Budget Deadline Reminder")
+            .setHtml(htmlContent);
+
+        await mailerSend.email.send(emailParams);
+        console.log("✅ Reminder email sent successfully!");
+    } catch (error) {
+        console.error("❌ Failed to send reminder email:", error.message);
+    }
+};
+
+
 // Create a new budget
 const postABudget = async (req, res) => {
     try {
@@ -215,4 +268,5 @@ module.exports = {
     getASingleBudget,
     updateABudget,
     deleteABudget,
+    sendBudgetDeadlineReminder
 };

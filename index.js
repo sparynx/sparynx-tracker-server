@@ -1,5 +1,5 @@
 const express = require('express');
-
+require("./budgetScheduler"); // Start the cron job
 require('dotenv').config()
 
 const cors = require('cors');
